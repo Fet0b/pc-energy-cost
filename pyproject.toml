@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pc-energy-cost"
+version = "0.1.0"
+description = "Estimativa do custo de energia atribuível a um PC"
+requires-python = ">=3.11"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = ['tzdata; sys_platform == "win32"']
+
+[project.optional-dependencies]
+dev = ["pytest", "build"]
+
+[project.scripts]
+pc-energy-cost = "pc_energy_cost.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = [
+    "live: acessa a rede real",
+    "live_windows: exige Windows real",
+    "install: instala o pacote em ambiente isolado",
+]
+addopts = "-m 'not live and not live_windows and not install'"
