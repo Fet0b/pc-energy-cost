@@ -1,0 +1,209 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1960" height="1450" viewBox="0 0 1960 1450" role="img" aria-labelledby="t d">
+<title id="t">Arquitetura do pc-energy-cost: fluxo da entrada até a saída</title>
+<desc id="d">Entradas (potência informada, série CSV, telemetria, tarifa manual, tarifa ANEEL) passam pela interface CLI, pelos casos de uso e pelo domínio; portas ligam os casos de uso aos adaptadores; as saídas são relatório texto e JSON. Não existe saída CSV.</desc>
+<defs><marker id="seta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#7fa3c2"/></marker></defs>
+<rect width="1960" height="1450" fill="#0e1822"/>
+<text x="30" y="36" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#eaf1f7" text-anchor="start">pc-energy-cost: fluxo da entrada até a saída (nomes conferidos no código)</text>
+<text x="30" y="64" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7fa3c2" text-anchor="start">ENTRADAS (origens de potência e de tarifa)</text>
+<rect x="30" y="70" width="270" height="100" rx="8" fill="#1b2d3d" stroke="#2f4a61" stroke-width="2"/>
+<text x="42" y="94" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">Potência informada</text>
+<text x="42" y="114" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">--potencia W --horas H</text>
+<text x="42" y="131" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">--cenario-potencia-nominal W</text>
+<line x1="165" y1="170" x2="165" y2="200" stroke="#7fa3c2" stroke-width="2.5"/>
+<rect x="316" y="70" width="270" height="100" rx="8" fill="#1b2d3d" stroke="#2f4a61" stroke-width="2"/>
+<text x="328" y="94" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">Série CSV</text>
+<text x="328" y="114" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">--serie-csv arquivo.csv</text>
+<text x="328" y="131" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">colunas: timestamp,watts</text>
+<line x1="451" y1="170" x2="451" y2="200" stroke="#7fa3c2" stroke-width="2.5"/>
+<rect x="602" y="70" width="270" height="100" rx="8" fill="#1b2d3d" stroke="#2f4a61" stroke-width="2"/>
+<text x="614" y="94" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">Telemetria</text>
+<text x="614" y="114" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">sem --potencia/--serie-csv</text>
+<text x="614" y="131" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">RAPL (Linux) · WMI (Windows)</text>
+<line x1="737" y1="170" x2="737" y2="200" stroke="#7fa3c2" stroke-width="2.5"/>
+<rect x="888" y="70" width="270" height="100" rx="8" fill="#1b2d3d" stroke="#2f4a61" stroke-width="2"/>
+<text x="900" y="94" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">Tarifa manual</text>
+<text x="900" y="114" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">--tarifa-manual-total</text>
+<text x="900" y="131" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">--inclui · --adicional-kwh</text>
+<line x1="1023" y1="170" x2="1023" y2="200" stroke="#7fa3c2" stroke-width="2.5"/>
+<rect x="1174" y="70" width="270" height="100" rx="8" fill="#1b2d3d" stroke="#2f4a61" stroke-width="2"/>
+<text x="1186" y="94" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">Tarifa ANEEL</text>
+<text x="1186" y="114" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">--municipio · --distribuidora</text>
+<text x="1186" y="131" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">dados abertos da ANEEL</text>
+<line x1="1309" y1="170" x2="1309" y2="200" stroke="#7fa3c2" stroke-width="2.5"/>
+<line x1="165" y1="200" x2="1309" y2="200" stroke="#7fa3c2" stroke-width="2.5"/>
+<polyline points="737,200 737,250" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="750" y="224" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">argv: run() (interface/cli/main.py)</text>
+<text x="30" y="244" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7fa3c2" text-anchor="start">INTERFACE (interface/cli)</text>
+<rect x="30" y="250" width="1414" height="140" rx="8" fill="#1d3a52" stroke="#4d7ea6" stroke-width="2"/>
+<text x="42" y="274" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">Interface CLI (interface/cli/main.py)</text>
+<text x="42" y="294" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#b4c7d8" text-anchor="start">run(argv, services, stdin_is_tty) -&gt; _build_parser() -&gt; _estimar()</text>
+<text x="42" y="311" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#b4c7d8" text-anchor="start">Services: portas e casos de uso injetados; montado por build_services() (composition.py)</text>
+<text x="42" y="328" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#b4c7d8" text-anchor="start">DomainError -&gt; código de saída (D13); argparse nunca escreve em stderr</text>
+<text x="1720" y="244" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7fa3c2" text-anchor="start">SAÍDAS</text>
+<rect x="1720" y="270" width="210" height="70" rx="8" fill="#14352f" stroke="#3fb6a8" stroke-width="2"/>
+<text x="1732" y="294" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">Relatório texto</text>
+<text x="1732" y="314" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">pt-BR</text>
+<rect x="1720" y="345" width="210" height="70" rx="8" fill="#14352f" stroke="#3fb6a8" stroke-width="2"/>
+<text x="1732" y="369" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">JSON schema v1</text>
+<text x="1732" y="389" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">schema_version "1"</text>
+<rect x="1720" y="440" width="210" height="70" rx="8" fill="#0e1822" stroke="#52687a" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1732" y="464" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">CSV</text>
+<text x="1732" y="484" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">não existe (só entrada)</text>
+<polyline points="1444,305 1720,305" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="1456" y="280" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">render_estimate()</text>
+<text x="1456" y="296" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(interface/cli/render_pt.py)</text>
+<polyline points="1444,380 1720,380" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="1456" y="355" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">estimate_to_json()</text>
+<text x="1456" y="371" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(interface/cli/json_schema.py)</text>
+<text x="30" y="494" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7fa3c2" text-anchor="start">CASOS DE USO (application)</text>
+<rect x="30" y="500" width="270" height="100" rx="8" fill="#17404a" stroke="#3f8f99" stroke-width="2"/>
+<text x="42" y="524" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">refresh_catalog()</text>
+<text x="42" y="544" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">application/refresh_catalog.py</text>
+<text x="42" y="561" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">só com tarifa ANEEL</text>
+<polyline points="165,390 165,500" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<rect x="316" y="500" width="270" height="100" rx="8" fill="#17404a" stroke="#3f8f99" stroke-width="2"/>
+<text x="328" y="524" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">resolve_supplier()</text>
+<text x="328" y="544" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">application/resolve_supplier.py</text>
+<text x="328" y="561" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">--municipio -&gt; CNPJ</text>
+<polyline points="451,390 451,500" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<rect x="602" y="500" width="270" height="100" rx="8" fill="#17404a" stroke="#3f8f99" stroke-width="2"/>
+<text x="614" y="524" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">measure_power()</text>
+<text x="614" y="544" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">application/measure_power.py</text>
+<text x="614" y="561" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">série CSV ou telemetria</text>
+<polyline points="737,390 737,500" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<rect x="1174" y="500" width="270" height="100" rx="8" fill="#17404a" stroke="#3f8f99" stroke-width="2"/>
+<text x="1186" y="524" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">estimate_cost()</text>
+<text x="1186" y="544" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">application/estimate_cost.py</text>
+<text x="1186" y="561" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">resolve_rate() · build_extras()</text>
+<text x="1186" y="578" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">(application/resolve_tariff.py)</text>
+<polyline points="1309,390 1309,500" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="173" y="430" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">refresh_catalog()</text>
+<text x="173" y="446" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(application/refresh_catalog.py)</text>
+<text x="459" y="430" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">resolve_supplier()</text>
+<text x="459" y="446" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(application/resolve_supplier.py)</text>
+<text x="745" y="430" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">measure_power()</text>
+<text x="745" y="446" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(application/measure_power.py)</text>
+<text x="1317" y="430" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">estimate_cost()</text>
+<text x="1317" y="446" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(application/estimate_cost.py)</text>
+<text x="30" y="814" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7fa3c2" text-anchor="start">DOMÍNIO (domain)</text>
+<rect x="316" y="820" width="270" height="200" rx="8" fill="#2a2f1f" stroke="#8c9a52" stroke-width="2"/>
+<text x="328" y="844" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">location_supplier</text>
+<text x="328" y="864" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">resolve_supplier()</text>
+<text x="328" y="881" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">user_confirmed_link()</text>
+<text x="328" y="898" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">(domain/location_supplier/</text>
+<text x="328" y="915" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">resolver.py)</text>
+<text x="328" y="932" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">Municipality · SupplierLink</text>
+<rect x="602" y="820" width="270" height="200" rx="8" fill="#2a2f1f" stroke="#8c9a52" stroke-width="2"/>
+<text x="614" y="844" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">metering</text>
+<text x="614" y="864" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">MeteringProvider (Protocol)</text>
+<text x="614" y="881" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">availability() · read()</text>
+<text x="614" y="898" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">(domain/metering/ports.py)</text>
+<text x="614" y="915" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">Sample · Scope</text>
+<text x="614" y="932" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">Available · Unavailable</text>
+<rect x="888" y="820" width="270" height="200" rx="8" fill="#2a2f1f" stroke="#8c9a52" stroke-width="2"/>
+<text x="900" y="844" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">tariff_catalog</text>
+<text x="900" y="864" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">select_tariff()</text>
+<text x="900" y="881" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">list_vigencias()</text>
+<text x="900" y="898" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">ResolvedTariff.build()</text>
+<text x="900" y="915" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">(domain/tariff_catalog/</text>
+<text x="900" y="932" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">selection.py · model.py)</text>
+<rect x="1174" y="820" width="270" height="200" rx="8" fill="#2a2f1f" stroke="#8c9a52" stroke-width="2"/>
+<text x="1186" y="844" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">energy_estimation</text>
+<text x="1186" y="864" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">integrate_power()</text>
+<text x="1186" y="881" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">split_by_vigencia()</text>
+<text x="1186" y="898" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">energy_for_slice()</text>
+<text x="1186" y="915" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">assemble_estimate() -&gt; CostEstimate</text>
+<text x="1186" y="932" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">(domain/energy_estimation/</text>
+<text x="1186" y="949" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">integration.py · estimate.py)</text>
+<text x="1186" y="966" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">parse_watts() · parse_hours()</text>
+<text x="1186" y="983" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">(domain/shared/parsing.py)</text>
+<polyline points="451,600 451,820" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="459" y="650" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">user_confirmed_link()</text>
+<text x="459" y="666" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(domain/location_supplier/</text>
+<text x="459" y="682" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">resolver.py)</text>
+<polyline points="737,600 737,820" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="745" y="650" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">MeteringProvider.availability()</text>
+<text x="745" y="666" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">MeteringProvider.read()</text>
+<text x="745" y="682" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(domain/metering/ports.py)</text>
+<polyline points="1230,600 1230,820" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="1240" y="650" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">integrate_power()</text>
+<text x="1240" y="666" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">split_by_vigencia()</text>
+<text x="1240" y="682" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">energy_for_slice()</text>
+<text x="1240" y="698" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">assemble_estimate()</text>
+<text x="1240" y="714" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(domain/energy_estimation/</text>
+<text x="1240" y="730" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">integration.py, estimate.py)</text>
+<polyline points="1185,600 1110,820" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="900" y="740" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">resolve_rate() -&gt; select_tariff()</text>
+<text x="900" y="756" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(application/resolve_tariff.py -&gt;</text>
+<text x="900" y="772" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">domain/tariff_catalog/selection.py)</text>
+<text x="30" y="1084" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7fa3c2" text-anchor="start">PORTAS (ports)</text>
+<rect x="30" y="1090" width="270" height="72" rx="8" fill="#2a2140" stroke="#8a74c0" stroke-width="2"/>
+<text x="42" y="1114" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">Portas</text>
+<text x="42" y="1134" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">CatalogFiles · CatalogParser</text>
+<text x="42" y="1151" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">(application/ports.py)</text>
+<rect x="316" y="1090" width="270" height="72" rx="8" fill="#2a2140" stroke="#8a74c0" stroke-width="2"/>
+<text x="328" y="1114" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">Portas</text>
+<text x="328" y="1134" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">CatalogStore · SupplierSource</text>
+<text x="328" y="1151" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">Store · SupplierChooser</text>
+<text x="328" y="1168" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">(application/ports.py)</text>
+<rect x="1174" y="1090" width="270" height="72" rx="8" fill="#2a2140" stroke="#8a74c0" stroke-width="2"/>
+<text x="1186" y="1114" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">Portas</text>
+<text x="1186" y="1134" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">TariffSource · Clock</text>
+<text x="1186" y="1151" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">(application/ports.py)</text>
+<polyline points="60,600 60,1090" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="70" y="640" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">CatalogFiles.fetch()</text>
+<text x="70" y="656" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">CatalogParser.tariffs()</text>
+<text x="70" y="672" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(application/ports.py)</text>
+<polyline points="275,600 275,1090" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="268" y="880" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="end">CatalogStore.load_tariffs()</text>
+<text x="268" y="896" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="end">CatalogStore.load_coverage()</text>
+<text x="268" y="912" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="end">(application/ports.py)</text>
+<polyline points="316,560 308,560 308,1060 350,1060 350,1090" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="316" y="1038" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12" font-weight="400" fill="#f2d49b" text-anchor="start">SupplierSource.official_links()</text>
+<text x="316" y="1054" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12" font-weight="400" fill="#a7bccd" text-anchor="start">SupplierSource.user_link()</text>
+<text x="316" y="1070" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12" font-weight="400" fill="#a7bccd" text-anchor="start">Store.save_user_link() (application/ports.py)</text>
+<polyline points="1444,570 1490,570 1490,1060 1400,1060 1400,1090" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="1500" y="700" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">TariffSource.tariff_records()</text>
+<text x="1500" y="716" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">TariffSource.source_info()</text>
+<text x="1500" y="732" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">Clock.now()</text>
+<text x="1500" y="748" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(application/ports.py)</text>
+<polyline points="737,1020 737,1230" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="745" y="1050" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">implementada por</text>
+<text x="745" y="1066" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">availability() e read()</text>
+<text x="745" y="1082" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(domain/metering/ports.py)</text>
+<text x="30" y="1224" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7fa3c2" text-anchor="start">ADAPTADORES (infrastructure)</text>
+<rect x="30" y="1230" width="556" height="150" rx="8" fill="#222c36" stroke="#5d7488" stroke-width="2"/>
+<text x="42" y="1254" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">Adaptadores ANEEL (infrastructure/aneel, http, cache)</text>
+<text x="42" y="1274" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12.5" font-weight="400" fill="#b4c7d8" text-anchor="start">AneelCatalogFiles.fetch()</text>
+<text x="42" y="1291" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12.5" font-weight="400" fill="#b4c7d8" text-anchor="start"> -&gt; package_show(), resolve_resource() (aneel/ckan.py)</text>
+<text x="42" y="1308" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12.5" font-weight="400" fill="#b4c7d8" text-anchor="start"> -&gt; download() (http/fetcher.py)</text>
+<text x="42" y="1325" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12.5" font-weight="400" fill="#b4c7d8" text-anchor="start"> -&gt; FileCache.store() (cache/file_cache.py)</text>
+<text x="42" y="1342" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12.5" font-weight="400" fill="#b4c7d8" text-anchor="start">AneelCatalogParser.tariffs() -&gt; read_tariffs() (aneel/tariff_csv.py)</text>
+<text x="42" y="1359" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12.5" font-weight="400" fill="#b4c7d8" text-anchor="start">AneelCatalogParser.coverage() -&gt;</text>
+<text x="42" y="1376" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12.5" font-weight="400" fill="#b4c7d8" text-anchor="start"> build_coverage_index() (aneel/supplier_csv.py)</text>
+<rect x="602" y="1230" width="270" height="150" rx="8" fill="#222c36" stroke="#5d7488" stroke-width="2"/>
+<text x="614" y="1254" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">Adaptadores de medição</text>
+<text x="614" y="1274" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">CsvPowerSeries.read()</text>
+<text x="614" y="1291" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start"> parse_series()</text>
+<text x="614" y="1308" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">SamplingRaplMeter.read()</text>
+<text x="614" y="1325" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start"> LinuxRaplProvider</text>
+<text x="614" y="1342" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start"> .take_reading()</text>
+<text x="614" y="1359" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">WindowsWmiProvider.read()</text>
+<text x="614" y="1376" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#b4c7d8" text-anchor="start">(infrastructure/metering/*.py)</text>
+<rect x="888" y="1230" width="556" height="150" rx="8" fill="#222c36" stroke="#5d7488" stroke-width="2"/>
+<text x="900" y="1254" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="16" font-weight="700" fill="#eaf1f7" text-anchor="start">SqliteStore</text>
+<text x="900" y="1274" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12.5" font-weight="400" fill="#b4c7d8" text-anchor="start">implementa TariffSource, SupplierSource, Store e CatalogStore</text>
+<text x="900" y="1291" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12.5" font-weight="400" fill="#b4c7d8" text-anchor="start">tariff_records() · source_info() · load_tariffs() · load_coverage()</text>
+<text x="900" y="1308" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12.5" font-weight="400" fill="#b4c7d8" text-anchor="start">official_links() · user_link() · save_user_link()</text>
+<text x="900" y="1325" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12.5" font-weight="400" fill="#b4c7d8" text-anchor="start">get_preference() · set_preference()</text>
+<text x="900" y="1342" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12.5" font-weight="400" fill="#b4c7d8" text-anchor="start">(infrastructure/persistence/sqlite_store.py)</text>
+<polyline points="165,1162 165,1230" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="172" y="1184" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12" font-weight="400" fill="#f2d49b" text-anchor="start">AneelCatalogFiles.fetch()</text>
+<text x="172" y="1200" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="12" font-weight="400" fill="#a7bccd" text-anchor="start">AneelCatalogParser.tariffs()</text>
+<polyline points="400,1162 400,1195 1000,1195 1000,1230" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="420" y="1180" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#f2d49b" text-anchor="start">SqliteStore.official_links() · user_link() · save_user_link() · load_tariffs() · load_coverage()</text>
+<polyline points="1309,1162 1309,1230" fill="none" stroke="#7fa3c2" stroke-width="2.5" marker-end="url(#seta)"/>
+<text x="1318" y="1190" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#f2d49b" text-anchor="start">SqliteStore.tariff_records() · source_info()</text>
+<text x="1318" y="1206" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#a7bccd" text-anchor="start">(infrastructure/persistence/sqlite_store.py)</text>
+<text x="30" y="1420" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#9db4c8" text-anchor="start">Legenda: cada seta traz, em destaque, a função/método chamado e, entre parênteses, o módulo. Camadas: entradas, interface, casos de uso, domínio, portas, adaptadores.</text>
+</svg>

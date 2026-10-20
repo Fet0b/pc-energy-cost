@@ -123,6 +123,10 @@ def _estimar(
     inicio, fim = _parse_when(args.inicio, "--inicio"), _parse_when(args.fim, "--fim")
     rapl = _rapl_max_watts(args.rapl_max_watts)
 
+    if not manual and args.municipio is None and args.distribuidora is None:
+        # sem fonte de tarifa: falha antes de baixar o catálogo (que não seria usado)
+        raise InvalidInput("informe --tarifa-manual-total, --municipio ou --distribuidora")
+
     catalog: RefreshResult | None = None
     if not manual and services.refresh is not None:
         catalog = services.refresh(RefreshRequest(args.permitir_cache_vencido))

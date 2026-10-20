@@ -285,6 +285,21 @@ def test_csv_series_without_enough_gap_is_insufficient_coverage_exit_2(tmp_path,
     assert code == 0 and doc["result"]["cost_brl"] is not None
 
 
+def test_missing_csv_file_is_invalid_input_exit_2_not_a_traceback(tmp_path, capsys):
+    argv = ["estimar", "--serie-csv", str(tmp_path / "nao_existe.csv"), "--tarifa-manual-total", "0,8"]
+    code, doc = _json(argv, capsys)
+    assert code == 2 and doc["error"]["code"] == "invalid_input"
+
+
+def test_no_tariff_source_fails_before_any_catalog_download(capsys):
+    def refresh(request):
+        raise AssertionError("o catálogo não deve ser baixado sem fonte de tarifa")
+
+    argv = ["estimar", "--potencia", "100", "--horas", "1"]
+    code, doc = _json(argv, capsys, _services(refresh=refresh))
+    assert code == 2 and doc["error"]["code"] == "invalid_input"
+
+
 def test_partial_series_reports_coverage_and_excluded_intervals(capsys):
     argv = ["estimar", "--serie-csv", str(FIX / "serie_gap.csv"), "--tarifa-manual-total", "0,8"]
     code, doc = _json(argv, capsys)

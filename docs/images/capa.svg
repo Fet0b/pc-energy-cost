@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="t d">
+  <title id="t">pc-energy-cost: do PC ligado ao custo estimado em reais</title>
+  <desc id="d">Fluxo em quatro etapas: PC ligado (100 W por 10 h), energia (1,000 kWh), tarifa (R$ 0,78938 por kWh) e custo estimado (R$ 0,79). Valores de exemplo.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0e1822"/>
+      <stop offset="1" stop-color="#13232f"/>
+    </linearGradient>
+    <marker id="seta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#7fa3c2"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="420" fill="url(#bg)"/>
+
+  <text x="52" y="78" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="40" font-weight="700" fill="#eaf1f7">pc-energy-cost</text>
+  <text x="52" y="116" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="21" fill="#9db4c8">Custo em reais da energia atribuível a um PC</text>
+  <line x1="52" y1="136" x2="1148" y2="136" stroke="#243a4d" stroke-width="2"/>
+
+  <!-- 1: PC ligado -->
+  <rect x="52" y="170" width="232" height="160" rx="10" fill="#172a3a" stroke="#2f4a61" stroke-width="2"/>
+  <text x="72" y="204" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="19" fill="#9db4c8">1  PC ligado</text>
+  <rect x="104" y="226" width="64" height="44" rx="4" fill="none" stroke="#7fa3c2" stroke-width="3"/>
+  <line x1="136" y1="270" x2="136" y2="282" stroke="#7fa3c2" stroke-width="3"/>
+  <line x1="118" y1="282" x2="154" y2="282" stroke="#7fa3c2" stroke-width="3"/>
+  <polyline points="112,256 124,256 130,240 140,262 146,250 160,250" fill="none" stroke="#3fb6a8" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <text x="188" y="262" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="26" font-weight="700" fill="#eaf1f7">100 W</text>
+  <text x="72" y="314" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="19" fill="#9db4c8">durante 10 h</text>
+
+  <line x1="290" y1="250" x2="332" y2="250" stroke="#7fa3c2" stroke-width="3" marker-end="url(#seta)"/>
+
+  <!-- 2: Energia -->
+  <rect x="340" y="170" width="232" height="160" rx="10" fill="#172a3a" stroke="#2f4a61" stroke-width="2"/>
+  <text x="360" y="204" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="19" fill="#9db4c8">2  Energia</text>
+  <text x="360" y="262" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="32" font-weight="700" fill="#eaf1f7">1,000 kWh</text>
+  <text x="360" y="314" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="19" fill="#9db4c8">W × h ÷ 1000</text>
+
+  <line x1="578" y1="250" x2="620" y2="250" stroke="#7fa3c2" stroke-width="3" marker-end="url(#seta)"/>
+
+  <!-- 3: Tarifa -->
+  <rect x="628" y="170" width="232" height="160" rx="10" fill="#172a3a" stroke="#2f4a61" stroke-width="2"/>
+  <text x="648" y="204" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="19" fill="#9db4c8">3  Tarifa</text>
+  <text x="648" y="252" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="26" font-weight="700" fill="#eaf1f7">R$ 0,78938</text>
+  <text x="648" y="280" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="19" fill="#9db4c8">por kWh</text>
+  <text x="648" y="314" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="19" fill="#9db4c8">ANEEL ou manual</text>
+
+  <line x1="866" y1="250" x2="908" y2="250" stroke="#7fa3c2" stroke-width="3" marker-end="url(#seta)"/>
+
+  <!-- 4: Custo estimado -->
+  <rect x="916" y="170" width="232" height="160" rx="10" fill="#14352f" stroke="#3fb6a8" stroke-width="3"/>
+  <text x="936" y="204" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="19" fill="#a9d9d2">4  Custo estimado</text>
+  <text x="936" y="270" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="40" font-weight="700" fill="#eaf1f7">R$ 0,79</text>
+  <text x="936" y="314" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="19" fill="#a9d9d2">1 kWh × tarifa</text>
+
+  <text x="52" y="378" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="19" fill="#9db4c8">Estimativa da energia atribuível, não fatura. Sem tributos, bandeiras e encargos fixos. Valores de exemplo.</text>
+</svg>

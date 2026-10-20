@@ -1,5 +1,7 @@
 # pc-energy-cost
 
+![pc-energy-cost: PC ligado, energia em kWh, tarifa em R$/kWh e custo estimado (valores de exemplo)](docs/images/capa.svg)
+
 Estima, em BRL, o custo da energia atribuível a um PC ligado por uma duração planejada ou medida.
 
 **É uma estimativa da energia atribuível, não uma fatura.** Veja "Limites e avisos" abaixo.
@@ -158,8 +160,11 @@ Situação dos testes que dependem de ambiente:
 
 ## Documentação
 
-`docs/arquitetura.md`, `docs/fontes-de-dados.md`, `docs/telemetria.md`, `docs/extensoes.md`,
-`docs/checklist-instalacao.md` e `docs/matriz-requisitos-testes.md`.
+[docs/architecture.md](docs/architecture.md) (fluxo da entrada até a saída, com diagrama),
+[docs/arquitetura.md](docs/arquitetura.md), [docs/fontes-de-dados.md](docs/fontes-de-dados.md),
+[docs/telemetria.md](docs/telemetria.md), [docs/extensoes.md](docs/extensoes.md),
+[docs/checklist-instalacao.md](docs/checklist-instalacao.md) e
+[docs/matriz-requisitos-testes.md](docs/matriz-requisitos-testes.md).
 
 ## Licença
 

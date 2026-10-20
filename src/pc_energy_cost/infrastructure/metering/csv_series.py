@@ -74,3 +74,5 @@ class CsvPowerSeries:
                 return parse_series(fh, self._zone)
         except UnicodeDecodeError as exc:
             raise DomainError("csv_invalid_row", "CSV: codificação inválida") from exc
+        except OSError as exc:
+            raise InvalidInput(f"CSV ilegível: {exc.strerror or type(exc).__name__}") from exc
