@@ -627,3 +627,123 @@ def test_rapl_max_watts_non_integer_is_invalid_input(tmp_path, capsys):
     argv = ["estimar", "--tarifa-manual-total", "0,8", "--rapl-max-watts", "10,5"]
     code, doc = _json(argv, capsys, h.services(tmp_path))
     assert code == 2 and doc["error"]["code"] == "invalid_input"
+
+
+def _no_side_effects():
+    def refresh(request):
+        raise AssertionError("catálogo não deve ser atualizado com entrada inválida")
+
+    class Boom(FakeSuppliers):
+        def official_links(self, ibge_code):
+            raise AssertionError("fornecedor não deve ser resolvido com entrada inválida")
+
+    return _services(refresh=refresh, supplier_source=Boom([]))
+
+
+def test_csv_path_with_nul_is_exit_2_json_error(capsys):
+    argv = ["estimar", "--serie-csv", "a\x00b.csv", "--tarifa-manual-total", "0,8"]
+    code, doc = _json(argv, capsys)
+    assert code == 2 and doc["error"]["code"] == "invalid_input"
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        ["--potencia", "abc", "--horas", "1"],
+        ["--cenario-potencia-nominal", "-5", "--horas", "1"],
+        ["--potencia", "100", "--horas", "xyz"],
+        ["--potencia", "100", "--cenario-potencia-nominal", "50", "--horas", "1"],
+        ["--potencia", "100", "--horas", "1", "--max-gap", "zz"],
+        ["--potencia", "100", "--horas", "1", "--adicional-kwh", "0,1"],
+        ["--serie-csv", "/nao/existe.csv"],
+        ["--serie-csv", "/nao/existe.csv", "--potencia", "100"],
+    ],
+)
+def test_invalid_cheap_input_fails_before_refresh_and_supplier(extra, capsys):
+    argv = ["estimar", *extra, "--municipio", SP_IBGE]
+    code, doc = _json(argv, capsys, _no_side_effects())
+    assert code == 2 and doc["error"]["code"] == "invalid_input"
+
+
+def test_bad_csv_content_fails_before_refresh(tmp_path, capsys):
+    bad = tmp_path / "ruim.csv"
+    bad.write_text("timestamp,watts\nnao-data,1\n", encoding="utf-8")
+    argv = ["estimar", "--serie-csv", str(bad), "--distribuidora", CNPJ]
+    code, doc = _json(argv, capsys, _no_side_effects())
+    assert code == 2 and doc["error"]["code"] == "csv_invalid_row"
+
+
+@pytest.mark.parametrize(
+    "ident", [["--municipio", ""], ["--distribuidora", ""], ["--distribuidora", " . - "]]
+)
+def test_empty_tariff_source_identifier_fails_before_refresh(ident, capsys):
+    argv = ["estimar", "--potencia", "100", "--horas", "1", *ident]
+    code, doc = _json(argv, capsys, _no_side_effects())
+    assert code == 2 and doc["error"]["code"] == "invalid_input"
+
+
+@pytest.mark.parametrize(
+    "ident",
+    [
+        ["--municipio", "abc"],
+        ["--municipio", "123456"],
+        ["--municipio", "12345678"],
+        ["--municipio", "３５５０３０８"],  # dígitos não ASCII
+        ["--distribuidora", "123"],
+        ["--distribuidora", "6169522700019x"],
+        ["--distribuidora", "616952270001934"],
+    ],
+)
+def test_malformed_tariff_source_identifier_fails_before_refresh(ident, capsys):
+    argv = ["estimar", "--potencia", "100", "--horas", "1", *ident]
+    code, doc = _json(argv, capsys, _no_side_effects())
+    assert code == 2 and doc["error"]["code"] == "invalid_input"
+
+
+def test_formatted_cnpj_is_still_accepted(capsys):
+    argv = ["estimar", "--potencia", "100", "--horas", "1", "--distribuidora", "61.695.227/0001-93"]
+    code, doc = _json(argv, capsys)
+    assert code == 0, doc
+
+
+def test_empty_max_gap_is_invalid_input_before_refresh(capsys):
+    argv = ["estimar", "--potencia", "100", "--horas", "1", "--max-gap", "", "--municipio", SP_IBGE]
+    code, doc = _json(argv, capsys, _no_side_effects())
+    assert code == 2 and doc["error"]["code"] == "invalid_input"
+
+
+@pytest.mark.parametrize(
+    "extra, error",
+    [
+        (["--potencia", "100"], "invalid_input"),  # sem duração
+        (["--cenario-potencia-nominal", "100"], "invalid_input"),
+        (["--potencia", "100", "--inicio", "2026-10-19T10:00:00"], "invalid_input"),
+        (["--potencia", "100", "--fim", "2026-10-19T10:00:00"], "invalid_input"),
+        (
+            ["--potencia", "100", "--inicio", "2026-10-19T11:00:00", "--fim", "2026-10-19T10:00:00"],
+            "invalid_interval",
+        ),
+    ],
+)
+def test_invalid_duration_or_interval_fails_before_refresh(extra, error, capsys):
+    argv = ["estimar", *extra, "--municipio", SP_IBGE]
+    code, doc = _json(argv, capsys, _no_side_effects())
+    assert code == 2 and doc["error"]["code"] == error
+
+
+def test_inverted_interval_with_csv_fails_before_refresh(capsys):
+    argv = [
+        "estimar", "--serie-csv", str(FIX / "serie_gap.csv"), "--municipio", SP_IBGE,
+        "--inicio", "2026-10-19T11:00:00", "--fim", "2026-10-19T10:00:00",
+    ]
+    code, doc = _json(argv, capsys, _no_side_effects())
+    assert code == 2 and doc["error"]["code"] == "invalid_interval"
+
+
+def test_horas_takes_precedence_over_inverted_interval(capsys):
+    argv = [
+        "estimar", "--potencia", "100", "--horas", "1", "--tarifa-manual-total", "0,8",
+        "--inicio", "2026-10-19T11:00:00", "--fim", "2026-10-19T10:00:00",
+    ]
+    code, doc = _json(argv, capsys)
+    assert code == 0, doc
