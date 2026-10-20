@@ -12,16 +12,13 @@ from pc_energy_cost.domain.metering.model import Available, SampleUnit, Scope, U
 from pc_energy_cost.domain.shared.errors import InsufficientCoverage, InvalidInput
 from pc_energy_cost.infrastructure.metering.linux_rapl import LinuxRaplProvider
 
-BASELINE = Path(__file__).resolve().parent.parent / "fixtures" / "metering" / "powercap_fake"
 T0 = datetime(2026, 10, 19, 10, 0, tzinfo=timezone(timedelta(hours=-3)))
 SEC = 1_000_000_000
 
 
 @pytest.fixture
-def root(tmp_path):
-    dst = tmp_path / "powercap"
-    shutil.copytree(BASELINE, dst)
-    return dst
+def root(tmp_path, copy_powercap_fake):
+    return copy_powercap_fake(tmp_path / "powercap")
 
 
 def write(root, zone, name, value):

@@ -19,11 +19,18 @@ from ...application.measure_power import measure_power
 from ...application.ports import Clock, Store, SupplierChooser, SupplierSource, TariffSource
 from ...application.refresh_catalog import RefreshRequest, RefreshResult
 from ...application.resolve_supplier import SupplierAmbiguous, SupplierRequest, resolve_supplier
-from ...application.resolve_tariff import TariffRequest
+from ...application.resolve_tariff import TariffRequest, build_extras
 from ...domain.location_supplier.model import SupplierLink
 from ...domain.metering.ports import MeteringProvider
+from ...domain.energy_estimation.schedule import load_zone
 from ...domain.shared.errors import DomainError, InvalidInput, UnavailableError
-from ...domain.shared.parsing import parse_decimal
+from ...domain.shared.parsing import (
+    parse_decimal,
+    parse_hours,
+    parse_max_gap,
+    parse_rate,
+    parse_watts,
+)
 from . import json_schema, render_pt
 
 RAPL_MAX_WATTS_RANGE = (Decimal(1), Decimal(10_000))
@@ -116,33 +123,53 @@ def _digits(text: str) -> str:
     return re.sub(r"[.\-/\s]", "", text)
 
 
+def _is_ascii_digits(text: str, length: int) -> bool:
+    return len(text) == length and text.isascii() and text.isdigit()
+
+
+def _check_window(args: argparse.Namespace, inicio: datetime | None, fim: datetime | None) -> None:
+    """Duração/intervalo checáveis sem rede; espelha a precedência de `estimate_cost` (horas > janela)."""
+    if inicio is not None and fim is not None and args.horas is None:
+        zone = load_zone()
+        start = inicio if inicio.tzinfo else inicio.replace(tzinfo=zone)
+        end = fim if fim.tzinfo else fim.replace(tzinfo=zone)
+        # série CSV integra a janela e exige fim > início; potência fixa aceita janela vazia
+        if end < start or (args.serie_csv is not None and end == start):
+            raise InvalidInput("o fim do intervalo deve ser posterior ao início", code="invalid_interval")
+    if args.serie_csv is None and (args.potencia or args.cenario_potencia_nominal):
+        if args.horas is None and (inicio is None or fim is None):
+            raise InvalidInput("informe --horas ou --inicio/--fim")
+
+
 def _estimar(
     args: argparse.Namespace, services: Services, tty: bool
 ) -> tuple[Any, SupplierLink | None, RefreshResult | None]:
     manual = args.tarifa_manual_total is not None
     inicio, fim = _parse_when(args.inicio, "--inicio"), _parse_when(args.fim, "--fim")
     rapl = _rapl_max_watts(args.rapl_max_watts)
+    _check_window(args, inicio, fim)
 
+    if args.municipio is not None and not _is_ascii_digits(args.municipio, 7):
+        raise InvalidInput("--municipio deve ser um código IBGE de 7 dígitos")
+    if args.distribuidora is not None and not _is_ascii_digits(_digits(args.distribuidora), 14):
+        raise InvalidInput("--distribuidora deve ser um CNPJ de 14 dígitos")
     if not manual and args.municipio is None and args.distribuidora is None:
         # sem fonte de tarifa: falha antes de baixar o catálogo (que não seria usado)
         raise InvalidInput("informe --tarifa-manual-total, --municipio ou --distribuidora")
 
-    catalog: RefreshResult | None = None
-    if not manual and services.refresh is not None:
-        catalog = services.refresh(RefreshRequest(args.permitir_cache_vencido))
-
-    cnpj: str | None = _digits(args.distribuidora) if args.distribuidora else None
-    supplier: SupplierLink | None = None
-    if not manual and args.municipio is not None:
-        if services.supplier_source is None or services.store is None:
-            raise UnavailableError("resolução de município indisponível neste ambiente")
-        supplier = resolve_supplier(
-            SupplierRequest(args.municipio, args.distribuidora, tty and not args.json, args.json),
-            services.supplier_source,
-            services.store,
-            services.chooser,
+    # toda validação barata (potência, números, tarifa/adicionais, CSV) antes de rede/catálogo
+    if sum(v is not None for v in (args.potencia, args.cenario_potencia_nominal, args.serie_csv)) > 1:
+        raise InvalidInput(
+            "informe exatamente uma fonte de potência: potência média, série ou cenário nominal"
         )
-        cnpj = supplier.distributor.cnpj
+    for watts in (args.potencia, args.cenario_potencia_nominal):
+        if watts is not None:
+            parse_watts(watts)
+    if args.horas is not None:
+        parse_hours(args.horas)
+    if args.max_gap is not None:
+        parse_max_gap(args.max_gap)
+    cnpj: str | None = _digits(args.distribuidora) if args.distribuidora else None
     tariff = TariffRequest(
         cnpj=cnpj,
         manual_total=args.tarifa_manual_total,
@@ -151,6 +178,9 @@ def _estimar(
         adicional_tipo=args.adicional_tipo,
         projetar_ultima_tarifa=args.projetar_ultima_tarifa,
     )
+    build_extras(tariff)
+    if manual:
+        parse_rate(args.tarifa_manual_total)
 
     samples = None
     metered_scope = None
@@ -161,7 +191,24 @@ def _estimar(
         if services.series_provider is None:
             raise UnavailableError("leitura de série CSV indisponível neste ambiente")
         samples = measure_power(services.series_provider(Path(args.serie_csv))).samples
-    elif args.potencia is None and args.cenario_potencia_nominal is None:
+
+    catalog: RefreshResult | None = None
+    if not manual and services.refresh is not None:
+        catalog = services.refresh(RefreshRequest(args.permitir_cache_vencido))
+
+    supplier: SupplierLink | None = None
+    if not manual and args.municipio is not None:
+        if services.supplier_source is None or services.store is None:
+            raise UnavailableError("resolução de município indisponível neste ambiente")
+        supplier = resolve_supplier(
+            SupplierRequest(args.municipio, args.distribuidora, tty and not args.json, args.json),
+            services.supplier_source,
+            services.store,
+            services.chooser,
+        )
+        tariff = dataclasses.replace(tariff, cnpj=supplier.distributor.cnpj)
+
+    if args.serie_csv is None and args.potencia is None and args.cenario_potencia_nominal is None:
         if services.meter_provider is None:
             raise UnavailableError("telemetria indisponível: nenhum provider de medição configurado")
         result = measure_power(services.meter_provider(rapl))
