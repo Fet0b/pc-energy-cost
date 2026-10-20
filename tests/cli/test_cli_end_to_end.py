@@ -569,10 +569,8 @@ SEC = 1_000_000_000
 
 
 class _RaplHarness:
-    def __init__(self, tmp_path, steps):
-        self.root = tmp_path / "powercap"
-        shutil.copytree(Path(__file__).parent.parent / "fixtures" / "metering" / "powercap_fake",
-                        self.root)
+    def __init__(self, tmp_path, steps, copy_powercap_fake):
+        self.root = copy_powercap_fake(tmp_path / "powercap")
         self.mono = 5 * SEC
         self.wall = datetime(2026, 10, 19, 10, 0, tzinfo=timezone.utc)
         self.counter = 0
@@ -592,8 +590,8 @@ class _RaplHarness:
         )
 
 
-def test_rapl_via_composition_samples_in_read_and_reports_cpu_package(tmp_path, capsys):
-    h = _RaplHarness(tmp_path, [(5, 50_000_000), (5, 50_000_000)])
+def test_rapl_via_composition_samples_in_read_and_reports_cpu_package(tmp_path, capsys, copy_powercap_fake):
+    h = _RaplHarness(tmp_path, [(5, 50_000_000), (5, 50_000_000)], copy_powercap_fake)
     argv = ["estimar", "--tarifa-manual-total", "0,78938"]
     code, doc = _json(argv, capsys, h.services(tmp_path))
     assert code == 0, doc
@@ -602,9 +600,9 @@ def test_rapl_via_composition_samples_in_read_and_reports_cpu_package(tmp_path, 
     assert Decimal(r["energy_kwh"]) > 0
 
 
-def test_rapl_excluded_intervals_reach_the_estimate_as_partial_data(tmp_path, capsys):
+def test_rapl_excluded_intervals_reach_the_estimate_as_partial_data(tmp_path, capsys, copy_powercap_fake):
     # segundo par com dt = 20 s > dt_max (5 s): indeterminate_wrap ⇒ excluído, vira partial_data
-    h = _RaplHarness(tmp_path, [(5, 50_000_000), (20, 50_000_000)])
+    h = _RaplHarness(tmp_path, [(5, 50_000_000), (20, 50_000_000)], copy_powercap_fake)
     argv = ["estimar", "--tarifa-manual-total", "0,78938"]
     code, doc = _json(argv, capsys, h.services(tmp_path))
     assert code == 0, doc
@@ -613,8 +611,8 @@ def test_rapl_excluded_intervals_reach_the_estimate_as_partial_data(tmp_path, ca
     assert any(e["reason"] == "indeterminate_wrap" for e in r["excluded_intervals"])
 
 
-def test_rapl_all_excluded_is_exit_6_and_unavailable_is_exit_6(tmp_path, capsys):
-    h = _RaplHarness(tmp_path, [(20, 1), (20, 1)])
+def test_rapl_all_excluded_is_exit_6_and_unavailable_is_exit_6(tmp_path, capsys, copy_powercap_fake):
+    h = _RaplHarness(tmp_path, [(20, 1), (20, 1)], copy_powercap_fake)
     argv = ["estimar", "--tarifa-manual-total", "0,78938"]
     code, doc = _json(argv, capsys, h.services(tmp_path))
     assert code == 6 and doc["error"]["code"] == "insufficient_coverage"
@@ -622,8 +620,8 @@ def test_rapl_all_excluded_is_exit_6_and_unavailable_is_exit_6(tmp_path, capsys)
     assert code == 6 and doc["error"]["code"] == "unavailable"
 
 
-def test_rapl_max_watts_non_integer_is_invalid_input(tmp_path, capsys):
-    h = _RaplHarness(tmp_path, [])
+def test_rapl_max_watts_non_integer_is_invalid_input(tmp_path, capsys, copy_powercap_fake):
+    h = _RaplHarness(tmp_path, [], copy_powercap_fake)
     argv = ["estimar", "--tarifa-manual-total", "0,8", "--rapl-max-watts", "10,5"]
     code, doc = _json(argv, capsys, h.services(tmp_path))
     assert code == 2 and doc["error"]["code"] == "invalid_input"

@@ -1,7 +1,6 @@
 """Contrato do Metering: a mesma suíte para manual, csv, rapl-fake e wmi-fake (nada é hardware real)."""
 
 import json
-import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -22,6 +21,15 @@ WMI_OK = {
 }
 
 
+_COPY_POWERCAP = None
+
+
+@pytest.fixture(autouse=True)
+def _powercap_copier(copy_powercap_fake):
+    global _COPY_POWERCAP
+    _COPY_POWERCAP = copy_powercap_fake
+
+
 def _manual(tmp_path):
     return ManualAverageWatts("120")
 
@@ -31,8 +39,7 @@ def _csv(tmp_path):
 
 
 def _rapl(tmp_path):
-    root = tmp_path / "powercap"
-    shutil.copytree(FIX / "powercap_fake", root)
+    root = _COPY_POWERCAP(tmp_path / "powercap")
     p = LinuxRaplProvider(root)
     p.take_reading()
     return p

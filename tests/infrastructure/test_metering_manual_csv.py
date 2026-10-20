@@ -211,6 +211,7 @@ def test_csv_directory_is_invalid_input(tmp_path):
     assert isinstance(outcome.get("error"), InvalidInput)
 
 
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="sem mkfifo (Windows)")
 def test_csv_fifo_is_rejected_without_blocking(tmp_path):
     fifo = tmp_path / "pipe.csv"
     os.mkfifo(fifo)
@@ -261,3 +262,29 @@ def test_blank_line_flood_cannot_bypass_row_cap():
 def test_few_blank_lines_are_still_tolerated():
     out = parse_series(["timestamp,watts", "", "2026-10-19T10:00:00,1", "", ""])
     assert len(out) == 1
+
+
+def _valid_csv(tmp_path):
+    path = tmp_path / "s.csv"
+    path.write_bytes(b"timestamp,watts\n2026-10-19T10:00:00-03:00,100\n")
+    return path
+
+
+def test_csv_read_works_where_os_has_no_o_nonblock(tmp_path, monkeypatch):
+    # Windows não define os.O_NONBLOCK: a leitura não pode depender dele
+    monkeypatch.delattr(os, "O_NONBLOCK")
+    assert len(CsvPowerSeries(_valid_csv(tmp_path)).read()) == 1
+
+
+def test_csv_file_is_opened_in_binary_mode_where_os_defines_o_binary(tmp_path, monkeypatch):
+    # no Windows, sem O_BINARY o fd do os.open é de texto (traduz CRLF e trata 0x1A como EOF)
+    monkeypatch.setattr(os, "O_BINARY", 0x8000, raising=False)
+    real_open, flags_seen = os.open, []
+
+    def spy(path, flags, *a, **kw):
+        flags_seen.append(flags)
+        return real_open(path, flags & ~0x8000, *a, **kw)  # 0x8000 não é flag válida no Linux
+
+    monkeypatch.setattr(os, "open", spy)
+    CsvPowerSeries(_valid_csv(tmp_path)).read()
+    assert flags_seen and all(f & 0x8000 for f in flags_seen)

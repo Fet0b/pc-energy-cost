@@ -95,7 +95,10 @@ class CsvPowerSeries:
 
 def _read_regular_file(path: Path) -> str:
     """Lê só arquivo regular de até MAX_BYTES; checa o fd aberto (sem corrida) e sem bloquear em FIFO."""
-    fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)  # O_NONBLOCK: open de FIFO não trava
+    # O_NONBLOCK: open de FIFO não trava (não existe no Windows); O_BINARY: só existe no Windows,
+    # onde o fd de os.open é de texto por padrão (traduz CRLF e trata 0x1A como fim de arquivo)
+    flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0)
+    fd = os.open(path, flags)
     with os.fdopen(fd, "rb") as fh:
         if not stat.S_ISREG(os.fstat(fh.fileno()).st_mode):
             raise InvalidInput("CSV: não é um arquivo regular")
