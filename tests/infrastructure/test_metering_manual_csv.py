@@ -243,7 +243,7 @@ def test_csv_at_size_cap_is_accepted(tmp_path, monkeypatch):
     body = "timestamp,watts\n2026-10-19T10:00:00,1\n"
     monkeypatch.setattr(csv_series, "MAX_BYTES", len(body.encode()))
     ok = tmp_path / "limite.csv"
-    ok.write_text(body, encoding="utf-8")
+    ok.write_bytes(body.encode())  # bytes: write_text trocaria \n por \r\n no Windows
     assert len(CsvPowerSeries(ok).read()) == 1
 
 
@@ -272,7 +272,7 @@ def _valid_csv(tmp_path):
 
 def test_csv_read_works_where_os_has_no_o_nonblock(tmp_path, monkeypatch):
     # Windows não define os.O_NONBLOCK: a leitura não pode depender dele
-    monkeypatch.delattr(os, "O_NONBLOCK")
+    monkeypatch.delattr(os, "O_NONBLOCK", raising=False)
     assert len(CsvPowerSeries(_valid_csv(tmp_path)).read()) == 1
 
 
