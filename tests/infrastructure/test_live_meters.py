@@ -141,7 +141,14 @@ def test_s12_rapl_short_read_failure_does_not_span_the_failure(rapl):
 
 
 def _retained_growth(run, n):
-    """Bytes retidos após `n` tiques (com coleta de ciclos): lixo ainda não coletado não conta."""
+    """Bytes retidos após `n` tiques (com coleta de ciclos): lixo ainda não coletado não conta.
+
+    Faz antes uma passada de aquecimento do mesmo tamanho: alocações únicas do interpretador
+    (ex.: crescimento da tabela de strings internadas, que o pathlib do Python 3.13 aciona e que
+    caiu dentro da janela medida, ~1,9 MB com contagem 1) não dependem de `n`, ao contrário de
+    um histórico; a passada medida mostra só o que cresce com os tiques.
+    """
+    run(n)
     gc.collect()
     tracemalloc.start()
     base = tracemalloc.take_snapshot()
