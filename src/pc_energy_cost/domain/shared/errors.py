@@ -7,6 +7,7 @@ _EXIT_2 = (
     "overlapping_intervals", "timezone_data_missing", "double_inclusion",
     "inclusion_undeclared", "csv_conflicting_duplicate", "csv_unknown_columns",
     "csv_invalid_header", "csv_invalid_row", "csv_too_many_rows",
+    "session_already_open", "session_not_found",
 )
 _EXIT_3 = ("supplier_ambiguous", "unsupported", "tariff_ambiguous")
 _EXIT_4 = (

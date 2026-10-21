@@ -132,3 +132,34 @@ def test_a08_no_float_calls_or_annotations_in_domain_and_value_objects_use_decim
         value = cls.__dataclass_fields__["value"]
         assert value.type in (Decimal, "Decimal"), cls
     assert units.Duration.__dataclass_fields__["hours"].type in (Decimal, "Decimal")
+
+
+FORBIDDEN_NAMES = ("proxmox", "vmid", "description", "digest")
+
+
+def test_s13_domain_and_application_never_mention_proxmox_api_names():
+    offenders: list[str] = []
+    scanned = 0
+    for module, path in _modules():
+        if _layer(module) not in ("domain", "application"):
+            continue
+        scanned += 1
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            low = line.lower()
+            offenders.extend(f"{module}:{lineno} {n}" for n in FORBIDDEN_NAMES if n in low)
+    assert scanned >= 20, "a varredura S13 não encontrou os módulos de domain/application"
+    assert offenders == []
+
+
+def test_s13_usage_session_domain_imports_only_domain_and_stdlib():
+    checked = 0
+    for module, path in _modules():
+        if not module.startswith(f"{PKG}.domain.usage_session"):
+            continue
+        checked += 1
+        for imported in _imports(module, path):
+            if imported.split(".")[0] == PKG:
+                assert _layer(imported) == "domain", f"{module} -> {imported}"
+            elif imported:
+                assert _is_stdlib(imported), f"{module} -> {imported}"
+    assert checked >= 2

@@ -22,7 +22,7 @@ pc-energy-cost = "pc_energy_cost.__main__:main"
 where = ["src"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["src", "tests/application"]  # session_fakes compartilhado
 testpaths = ["tests"]
 markers = [
     "live: acessa a rede real",

@@ -82,6 +82,12 @@ def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+# Nomes públicos para medidores irmãos (ex.: `LiveRaplMeter`); mesmo comportamento dos privados.
+CounterReadError = _Fail
+read_counter = _read_int
+utc_now = _utc_now
+
+
 class LinuxRaplProvider:
     def __init__(
         self,
@@ -161,6 +167,12 @@ class LinuxRaplProvider:
             return self._packages()
         except _Fail as f:
             raise UnavailableError(f"telemetria indisponível: {f.reason}") from None
+
+    def require_packages(self) -> tuple[_Package, ...]:
+        return self._require()
+
+    def dt_max_for_range(self, max_range: int) -> Decimal:
+        return self._dt_max_for(max_range)
 
     # -- política de amostragem -----------------------------------------------
     def _dt_max_for(self, max_range: int) -> Decimal:

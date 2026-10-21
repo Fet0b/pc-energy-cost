@@ -1,8 +1,6 @@
 # Matriz requisitos-testes
 
-Cada cenário planejado A1 a A53 aponta para exatamente uma função `test_aNN_*` existente. Os 53
-cenários planejados NÃO são 53 testes aprovados: a suíte tem mais casos (parametrizações e testes
-sem identificador A). Os números reais constam no README. Outros testes de apoio (por exemplo,
+Cada cenário planejado A1 a A53 aponta para exatamente uma função `test_aNN_*` existente. A série S (S1 a S14, sessões de uso, custo em tempo real e exportação) e o identificador R1 (contrato do README) usam o prefixo `test_sNN_*` e `test_r1_*`: cada identificador aponta abaixo para uma função representativa, e existem outras funções com o mesmo prefixo (por exemplo, `test_s02_*` tem vários casos). Os cenários planejados NÃO são tantos testes aprovados: a suíte tem mais casos (parametrizações e testes sem identificador). Os números reais constam no README. Outros testes de apoio (por exemplo,
 `test_layering_check_is_not_vacuous_*` e `test_metering_unavailable_providers_*`) não levam
 identificador A porque cada identificador aparece em uma só função.
 
@@ -65,6 +63,21 @@ ou `-m install`.
 | A51 | Live ANEEL (rede real) | `tests/live/test_live_aneel.py` | `test_a51_live_aneel_eletropaulo_b1` | live; excluído da suíte padrão |
 | A52 | Live RAPL (hardware com permissão) | `tests/live/test_live_linux_rapl.py` | `test_a52_live_linux_rapl_delta` | live; excluído da suíte padrão |
 | A53 | Live Windows WMI (Windows real) | `tests/live/test_live_windows_wmi.py` | `test_a53_live_windows_wmi_meter` | live_windows; excluído da suíte padrão |
+| S1 | `Session`: início < fim, `end_reason` só em sessão fechada, `invalid_interval` | `tests/unit/test_session_lifecycle.py` | `test_s01_closed_session_requires_start_before_end` | suíte padrão |
+| S2 | Recuperação após queda (`crash_recovered`, `reboot_detected`, futuro vira `clock_discontinuity`) | `tests/unit/test_session_lifecycle.py` | `test_s02_same_boot_old_heartbeat_is_crash_recovered` | suíte padrão |
+| S3 | Relógio de parede recua: intervalo excluído, sem energia negativa | `tests/unit/test_session_lifecycle.py` | `test_s03_wall_clock_goes_back_while_monotonic_advances` | suíte padrão |
+| S4 | Suspensão simulada divide a sessão; hora suspensa não entra no custo | `tests/unit/test_session_lifecycle.py` | `test_s04_wall_plus_one_hour_monotonic_plus_5s_is_suspend` | suíte padrão |
+| S5 | Sensor ausente aborta sem criar sessão com custo zero | `tests/application/test_track_session.py` | `test_s5_sensor_indisponivel_sem_potencia_aborta_sem_criar_sessao` | suíte padrão |
+| S6 | Sensor obsoleto: custo congelado e `excluded_s` cresce | `tests/unit/test_session_lifecycle.py` | `test_s06_stale_sensor_freezes_energy_and_grows_excluded` | suíte padrão |
+| S7 | Medido x assumido nunca misturados sem rótulo | `tests/unit/test_session_lifecycle.py` | `test_s07_total_only_exposed_with_parts` | suíte padrão |
+| S8 | Intervalos configuráveis: contagem exata de renderizações e gravações | `tests/application/test_track_session.py` | `test_s8_contagem_exata_de_renderizacoes_e_updates` | suíte padrão |
+| S9 | Durabilidade: queda sem `stop` recuperada no ledger | `tests/infrastructure/test_sqlite_sessions.py` | `test_s9_kill_without_stop_then_recover` | suíte padrão |
+| S10 | Exclusão mútua: sessão viva recusa sem fechar a primeira | `tests/application/test_track_session.py` | `test_s10_sessao_viva_recusa_sem_fechar_a_primeira` | suíte padrão |
+| S11 | Exportação "Proxmox-compatível (texto)": rótulos e nome | `tests/infrastructure/test_proxmox_text_export.py` | `test_s11_required_labels_and_name` | suíte padrão |
+| S12 | Contrato das portas de sessão: `Unavailable` nunca vira zero | `tests/contract/test_session_ports_contract.py` | `test_s12_meter_unavailable_never_becomes_zero` | suíte padrão |
+| S13 | Arquitetura: domínio e aplicação sem nomes de API do Proxmox | `tests/architecture/test_layering.py` | `test_s13_domain_and_application_never_mention_proxmox_api_names` | suíte padrão |
+| S14 | CLI `sessao` ponta a ponta pela composição real em diretório temporário | `tests/cli/test_cli_sessions.py` | `test_s14_composition_wires_real_sessions_end_to_end_in_tmp` | suíte padrão |
+| R1 | Contrato do README: exemplos, números de testes e caminhos | `tests/docs/test_readme_contract.py` | `test_r1_readme_examples_reproduce_the_quoted_fields` | suíte padrão |
 
 ## Observações honestas sobre A50 a A53
 
@@ -74,3 +87,8 @@ ou `-m install`.
   para aquele host; em outros hosts o resultado pode ser diferente.
 - A53 nunca foi executado em Windows real. Os testes do provider WMI (A43 a A46) usam apenas
   saídas fake e não contam como live.
+
+## Observações sobre a série S
+
+- O ledger separado muda o que S9 verifica: o teste `test_s9_store_untouched_by_ledger` (mesmo arquivo da linha S9) confere que o `store.sqlite` fica intacto e sem `-wal`/`-shm`; ele não é a função apontada na linha S9.
+- Os testes de sessão usam relógios, sensores e ledger fakes; o medidor ao vivo WMI nunca rodou em Windows real, e o live RAPL (A52) foi pulado no host de desenvolvimento.

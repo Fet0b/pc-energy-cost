@@ -50,6 +50,14 @@ motivo, nunca zero fabricado.
   (`unit_unknown`), `SupportCapabilities` 8 ou 256 (`only_when_discharging`) e leitura negativa
   (`invalid_reading`).
 
+## Sessões (leitura ao vivo)
+
+- `sessao acompanhar` lê o sensor por tiques (porta `LiveMeter`, memória O(1): só a leitura anterior). O sensor é lido em passos iguais que dividem `--intervalo` e nunca passam do `max_tick_s` do medidor (por exemplo, `--intervalo 7` com `max_tick_s` 5 lê a cada 3,5 s); a tela é renderizada a cada `--intervalo`. Sem isso, um intervalo longo com RAPL só produziria `indeterminate_wrap`.
+- Cada medidor declara a base da energia: `measured_counter` (RAPL, diferença de contador, escopo `cpu_package`), `measured_power` (WMI, potência instantânea integrada por degraus entre tiques, escopo `component`), `user_power` ou `scenario` (potência informada, rotulada como assumida). A energia medida e a assumida são acumuladas separadamente.
+- Sensor obsoleto: sem leitura válida por mais de 3 intervalos (padrão provisório), o custo congela, o tempo sem leitura é contado como tempo excluído (`excluded_s`) e nada é extrapolado nem preenchido com zero. Só `--potencia` com `--completar-com-potencia` completa o trecho, rotulado "assumido".
+- Medidor WMI ao vivo: `max_tick_s` = 10 s, derivado do timeout do subprocess do PowerShell. Esse valor NÃO foi medido, e o medidor nunca rodou em Windows real. Um intervalo maior que o teto somado ao timeout é excluído como lacuna, não integrado.
+- Tempo em que `acompanhar` não roda é desconhecido, não zero. Esta página não afirma como o relógio monotônico se comporta durante a suspensão em nenhum sistema operacional.
+
 ## Riscos
 
 3. `Win32_PowerMeter`: documentação legada; hardware real e Windows 10/11 modernos não testados;
