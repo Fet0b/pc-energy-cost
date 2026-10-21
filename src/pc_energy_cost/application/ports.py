@@ -2,14 +2,26 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
 
 from ..domain.location_supplier.model import CoverageIndex, SupplierLink
+from ..domain.metering.model import Available, ExcludedInterval, Scope, Unavailable
+from ..domain.shared.errors import InvalidInput
 from ..domain.tariff_catalog.model import SourceInfo, TariffRecord
+from ..domain.usage_session.lifecycle import RecoveryDecision
+from ..domain.usage_session.model import (
+    Accumulator,
+    EndReason,
+    EnergyBasis,
+    ExportOutcome,
+    Session,
+    SessionCostSummary,
+)
 
 
 class TariffSource(Protocol):
@@ -92,3 +104,73 @@ class SupplierChooser(Protocol):
     """Escolha interativa (só em TTY e sem --json); None ⇒ o usuário não escolheu."""
 
     def choose(self, candidates: Sequence[SupplierLink]) -> SupplierLink | None: ...
+
+
+@dataclass(frozen=True)
+class LiveReading:
+    """Resultado do último par de leituras: energia e duração, ou um intervalo excluído."""
+
+    energy_wh: Decimal = Decimal(0)
+    duration_s: Decimal = Decimal(0)
+    excluded: ExcludedInterval | None = None
+    assumed: bool = False
+
+    def __post_init__(self) -> None:
+        if self.energy_wh < 0 or self.duration_s < 0:
+            raise InvalidInput("leitura ao vivo com energia ou duração negativa")
+        if self.excluded is not None and self.energy_wh != 0:
+            raise InvalidInput("leitura ao vivo: intervalo excluído não carrega energia")
+
+
+class LiveMeter(Protocol):
+    """Leitura incremental do sensor; memória O(1) (só a leitura anterior)."""
+
+    def availability(self) -> Available | Unavailable: ...
+
+    def max_tick_s(self) -> Decimal:
+        """Maior intervalo entre leituras sem perder validade."""
+        ...
+
+    def energy_basis(self) -> EnergyBasis:
+        """Base de energia que as leituras deste medidor representam (contador ou potência)."""
+        ...
+
+    def tick(self) -> LiveReading: ...
+
+
+class SessionLedger(Protocol):
+    def open_session(
+        self, *, started_at: datetime, boot_id: str | None, sample_interval_s: int,
+        persist_interval_s: int, scope: Scope, energy_basis: EnergyBasis,
+    ) -> Session: ...
+
+    def heartbeat(self, session_id: int, last_seen_utc: datetime, acc: Accumulator) -> None:
+        """Um único UPDATE com o último batimento e os acumuladores."""
+        ...
+
+    def close(
+        self, session_id: int, ended_at: datetime, end_reason: EndReason, acc: Accumulator
+    ) -> Session: ...
+
+    def recover_open(
+        self, decide: Callable[[Session], RecoveryDecision]
+    ) -> tuple[Session, RecoveryDecision, Accumulator] | None:
+        """Numa transação: aplica `decide` à sessão aberta e fecha-a se não estiver viva."""
+        ...
+
+    def list_sessions(self, since: datetime | None = None, until: datetime | None = None
+                      ) -> Sequence[tuple[Session, Accumulator]]: ...
+
+    def get(self, session_id: int) -> tuple[Session, Accumulator] | None: ...
+
+
+class SummaryExporter(Protocol):
+    def export(self, summary: SessionCostSummary) -> ExportOutcome: ...
+
+
+class BootIdentity(Protocol):
+    def current(self) -> str | None: ...
+
+
+class MonotonicClock(Protocol):
+    def monotonic_ns(self) -> int: ...

@@ -17,8 +17,8 @@ linha é a função ou método chamado e as seguintes trazem o módulo entre par
 | Interface | `interface/cli` | `run()`, `_build_parser()`, `_estimar()` (`main.py`); `render_estimate()` (`render_pt.py`); `estimate_to_json()` (`json_schema.py`) |
 | Casos de uso | `application` | `refresh_catalog()`, `resolve_supplier()`, `measure_power()`, `estimate_cost()`, `resolve_rate()`, `build_extras()` |
 | Domínio | `domain` | `integrate_power()`, `split_by_vigencia()`, `energy_for_slice()`, `assemble_estimate()` e `CostEstimate`; `select_tariff()`, `list_vigencias()`, `ResolvedTariff.build()`; `resolve_supplier()` e `user_confirmed_link()`; `MeteringProvider`; `parse_watts()`, `parse_hours()` |
-| Portas | `application/ports.py`, `domain/metering/ports.py` | `TariffSource`, `SupplierSource`, `Clock`, `Store`, `SupplierChooser`, `CatalogFiles`, `CatalogParser`, `CatalogStore`, `MeteringProvider` |
-| Adaptadores | `infrastructure` | `AneelCatalogFiles`, `AneelCatalogParser`, `SqliteStore`, `FileCache`, `CsvPowerSeries`, `SamplingRaplMeter`, `LinuxRaplProvider`, `WindowsWmiProvider` |
+| Portas | `application/ports.py`, `domain/metering/ports.py` | `TariffSource`, `SupplierSource`, `Clock`, `Store`, `SupplierChooser`, `CatalogFiles`, `CatalogParser`, `CatalogStore`, `MeteringProvider`; de sessão: `LiveMeter`, `SessionLedger`, `SummaryExporter`, `BootIdentity`, `MonotonicClock` |
+| Adaptadores | `infrastructure` | `AneelCatalogFiles`, `AneelCatalogParser`, `SqliteStore`, `FileCache`, `CsvPowerSeries`, `SamplingRaplMeter`, `LinuxRaplProvider`, `WindowsWmiProvider`; de sessão: `SqliteSessionLedger`, `LiveRaplMeter`, `LiveWmiMeter`, `LiveManualPower`, `LinuxBootId`, `ProxmoxCompatibleTextExporter` |
 | Composição | `composition.py` | `build_services()` é o único ponto que liga adaptadores a casos de uso |
 
 ## Chamadas, na ordem do fluxo
@@ -47,6 +47,10 @@ linha é a função ou método chamado e as seguintes trazem o módulo entre par
 | 7a | com série ou contador: `integrate_power()` aplica as regras de cobertura (`--max-gap`) | `domain/energy_estimation/integration.py` |
 | 7b | `split_by_vigencia()`, `energy_for_slice()` e `assemble_estimate()` produzem o `CostEstimate`; o relógio vem de `Clock.now()` | `domain/energy_estimation/estimate.py`, `application/ports.py` |
 | 8 | `run()` entrega o resultado: `render_estimate()` (texto pt-BR) ou `estimate_to_json()` (JSON schema v1, com `--json`) | `interface/cli/render_pt.py`, `interface/cli/json_schema.py` |
+
+## Fluxo de `sessao` (resumo)
+
+`run()` chama `_acompanhar()` e, para `listar`, `custo` e `exportar`, as funções de `application/session_report.py` e `application/export_summary.py`. `track_session()` (`application/track_session.py`) lê `LiveMeter.tick()` em passos iguais que dividem o intervalo e nunca passam de `LiveMeter.max_tick_s()` (intervalo / teto(intervalo / `max_tick_s`)), atualiza o acumulador em memória, renderiza a cada intervalo e grava o batimento no `SessionLedger` a cada intervalo de persistência. As sessões vão para `sessions.sqlite`, separado do `store.sqlite`. Em `sessao`, `LiveManualPower` existe mas a CLI usa o `_AssumedPowerMeter` privado de `track_session` para potência informada. O diagrama `images/arquitetura.svg` cobre só o fluxo de `estimar`; ele não lista contextos nem portas de sessão e por isso não foi alterado.
 
 ## Origens e saídas
 

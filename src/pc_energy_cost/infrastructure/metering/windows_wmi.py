@@ -136,6 +136,11 @@ class WindowsWmiProvider:
         delta = timedelta(milliseconds=period) if period and period > 0 else timedelta(0)
         return Available(Scope.COMPONENT, tuple(warnings)), watts, delta
 
+    def instant_power(self) -> Decimal | Unavailable:
+        """Potência instantânea (W) agora, sem acumular amostras; indisponível nunca vira zero."""
+        result = self._evaluate()
+        return result if isinstance(result, Unavailable) else result[1]
+
     def availability(self) -> Available | Unavailable:
         result = self._evaluate()
         return result if isinstance(result, Unavailable) else result[0]

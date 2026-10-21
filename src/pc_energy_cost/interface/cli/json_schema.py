@@ -96,6 +96,112 @@ _ESTIMATE = {
     },
 }
 
+_NULLABLE_STR_T = {"type": ["string", "null"]}
+
+_SESSION_ROW = {
+    "type": "object",
+    "required": [
+        "id", "started_at", "ended_at", "end_reason", "scope", "energy_basis", "measured_kwh",
+        "assumed_kwh", "covered_s", "excluded_s", "partial_data",
+    ],
+    "properties": {
+        "id": {"type": "integer"},
+        "started_at": _STR,
+        "ended_at": _NULLABLE_STR_T,
+        "end_reason": _NULLABLE_STR_T,
+        "scope": _STR,
+        "energy_basis": _STR,
+        "measured_kwh": _STR,
+        "assumed_kwh": _STR,
+        "covered_s": _STR,
+        "excluded_s": _STR,
+        "partial_data": {"type": "boolean"},
+    },
+}
+
+_SESSION_TICK = {
+    "type": "object",
+    "required": [
+        "label", "session_id", "at", "measured_kwh", "assumed_kwh", "energy_kwh", "cost_brl",
+        "stale", "stale_for_s", "covered_s", "excluded_s", "partial_data", "final",
+        "end_reason", "warnings",
+    ],
+    "properties": {
+        "label": _STR,
+        "session_id": {"type": "integer"},
+        "at": _STR,
+        "measured_kwh": _STR,
+        "assumed_kwh": _STR,
+        "energy_kwh": _STR,
+        "cost_brl": _NULLABLE_STR_T,
+        "stale": {"type": "boolean"},
+        "stale_for_s": _NULLABLE_STR_T,
+        "covered_s": _STR,
+        "excluded_s": _STR,
+        "partial_data": {"type": "boolean"},
+        "final": {"type": "boolean"},
+        "end_reason": _NULLABLE_STR_T,
+        "warnings": _STR_LIST,
+    },
+}
+
+_SESSION_LIST = {
+    "type": "object",
+    "required": ["label", "sessions"],
+    "properties": {"label": _STR, "sessions": {"type": "array", "items": _SESSION_ROW}},
+}
+
+_SESSION_SUMMARY = {
+    "type": "object",
+    "required": [
+        "label", "since", "until", "sessions", "measured_kwh", "assumed_kwh",
+        "measured_cost_brl", "assumed_cost_brl", "cost_brl", "covered_s", "excluded_s",
+        "partial_data", "slices",
+    ],
+    "properties": {
+        "label": _STR,
+        "since": _STR,
+        "until": _STR,
+        "sessions": {"type": "integer"},
+        "measured_kwh": _STR,
+        "assumed_kwh": _STR,
+        "measured_cost_brl": _STR,
+        "assumed_cost_brl": _STR,
+        "cost_brl": _STR,
+        "covered_s": _STR,
+        "excluded_s": _STR,
+        "partial_data": {"type": "boolean"},
+        "slices": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["start", "end", "measured_kwh", "assumed_kwh", "rate"],
+                "properties": {
+                    "start": _STR, "end": _STR, "measured_kwh": _STR, "assumed_kwh": _STR,
+                    "rate": _NULLABLE_STR_T,
+                },
+            },
+        },
+    },
+}
+
+_EXPORT = {
+    "type": "object",
+    "required": ["label", "session_id", "truncated", "delivered", "text"],
+    "properties": {
+        "label": _STR,
+        "session_id": {"type": "integer"},
+        "truncated": {"type": "boolean"},
+        "delivered": {"type": "boolean"},
+        "text": _STR,
+    },
+}
+
+COMMANDS = (
+    "estimar", "atualizar-catalogo", "sessao acompanhar", "sessao listar", "sessao custo",
+    "sessao exportar",
+)
+
 _ERROR = {
     "type": "object",
     "required": ["code", "message"],
@@ -117,8 +223,13 @@ SCHEMA: dict[str, Any] = {
             "properties": {
                 "schema_version": {"const": SCHEMA_VERSION},
                 "ok": {"const": True},
-                "command": {"enum": ["estimar", "atualizar-catalogo"]},
-                "result": {"anyOf": [_ESTIMATE, _CATALOG]},
+                "command": {"enum": list(COMMANDS)},
+                "result": {
+                    "anyOf": [
+                        _ESTIMATE, _CATALOG, _SESSION_TICK, _SESSION_LIST, _SESSION_SUMMARY,
+                        _EXPORT,
+                    ]
+                },
             },
         },
         {
@@ -289,6 +400,87 @@ def estimate_to_json(
         ],
         "supplier": supplier_to_json(supplier),
         "catalog": catalog_to_json(catalog),
+    }
+
+
+def session_row_to_json(row: Any) -> dict[str, Any]:
+    """`row`: `SessionRow` (sessão + acumulador)."""
+    s, a = row.session, row.acc
+    return {
+        "id": s.id,
+        "started_at": _when(s.started_at),
+        "ended_at": _when(s.ended_at) if s.ended_at else None,
+        "end_reason": s.end_reason.value if s.end_reason else None,
+        "scope": s.scope.value,
+        "energy_basis": s.energy_basis.value,
+        "measured_kwh": _dec(a.measured_wh / 1000),
+        "assumed_kwh": _dec(a.assumed_wh / 1000),
+        "covered_s": _dec(a.covered_s),
+        "excluded_s": _dec(a.excluded_s),
+        "partial_data": a.partial_data,
+    }
+
+
+def session_list_to_json(rows: Any, label: str) -> dict[str, Any]:
+    return {"label": label, "sessions": [session_row_to_json(r) for r in rows]}
+
+
+def session_tick_to_json(
+    view: Any, label: str, *, final: bool = False, end_reason: str | None = None,
+    warnings: tuple[str, ...] = (),
+) -> dict[str, Any]:
+    """`view`: `TrackView`."""
+    return {
+        "label": label,
+        "session_id": view.session_id,
+        "at": _when(view.at),
+        "measured_kwh": _dec(view.measured_kwh),
+        "assumed_kwh": _dec(view.assumed_kwh),
+        "energy_kwh": _dec(view.measured_kwh + view.assumed_kwh),
+        "cost_brl": view.cost.to_json() if view.cost is not None else None,
+        "stale": view.acc.stale,
+        "stale_for_s": _dec(view.stale_for_s) if view.stale_for_s is not None else None,
+        "covered_s": _dec(view.acc.covered_s),
+        "excluded_s": _dec(view.acc.excluded_s),
+        "partial_data": view.acc.partial_data,
+        "final": final,
+        "end_reason": end_reason,
+        "warnings": list(warnings),
+    }
+
+
+def period_cost_to_json(cost: Any) -> dict[str, Any]:
+    """`cost`: `PeriodCost`."""
+    return {
+        "label": cost.label,
+        "since": _when(cost.since),
+        "until": _when(cost.until),
+        "sessions": cost.sessions,
+        "measured_kwh": _dec(cost.measured_kwh),
+        "assumed_kwh": _dec(cost.assumed_kwh),
+        "measured_cost_brl": cost.measured_cost.to_json(),
+        "assumed_cost_brl": cost.assumed_cost.to_json(),
+        "cost_brl": cost.total_cost.to_json(),
+        "covered_s": _dec(cost.covered_s),
+        "excluded_s": _dec(cost.excluded_s),
+        "partial_data": cost.partial_data,
+        "slices": [
+            {
+                "start": _day(sl.start), "end": _day(sl.end),
+                "measured_kwh": _dec(sl.measured_energy_kwh),
+                "assumed_kwh": _dec(sl.assumed_energy_kwh),
+                "rate": _dec(sl.rate_brl_per_kwh) if sl.rate_brl_per_kwh is not None else None,
+            }
+            for sl in cost.slices
+        ],
+    }
+
+
+def export_to_json(session_id: int, outcome: Any, text: str, label: str) -> dict[str, Any]:
+    """`outcome`: `ExportOutcome`; `text`: o texto exportado."""
+    return {
+        "label": label, "session_id": session_id, "truncated": outcome.truncated,
+        "delivered": outcome.delivered, "text": text,
     }
 
 

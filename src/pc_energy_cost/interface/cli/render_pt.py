@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any
 
 from ...application.refresh_catalog import RefreshResult
 from ...domain.energy_estimation.estimate import CostEstimate
@@ -141,3 +142,101 @@ def render_error(code: str, message: str, candidates: tuple[SupplierLink, ...] =
     for link in candidates:
         lines.append(f"  candidata: {link.distributor.sig_agente} (CNPJ {link.distributor.cnpj})")
     return "\n".join(lines) + "\n"
+
+
+# -- sessões ---------------------------------------------------------------------------------
+
+_END_REASON = {
+    "user_stop": "encerrada pelo usuário",
+    "suspend": "suspensão do sistema",
+    "reboot_detected": "reinício detectado",
+    "crash_recovered": "queda recuperada",
+    "clock_discontinuity": "descontinuidade do relógio",
+}
+
+_BASIS = {
+    "measured_counter": "medida (contador de energia)",
+    "measured_power": "medida (potência instantânea)",
+    "user_power": "potência informada",
+    "scenario": "cenário (potência nominal)",
+}
+
+
+def _kwh(value: Decimal) -> str:
+    return f"{value:.3f}".replace(".", ",")
+
+
+def _secs(value: Decimal) -> str:
+    return _span(timedelta(seconds=int(value)))
+
+
+def render_tick(view: Any, zone: Any) -> str:
+    """Uma linha de acompanhamento (sem quebra de linha)."""
+    at = view.at.astimezone(zone).strftime("%H:%M:%S")
+    cost = view.cost.display() if view.cost is not None else "indisponível"
+    line = (
+        f"[{at}] sessão {view.session_id} | medida {_kwh(view.measured_kwh)} kWh"
+        f" | assumida {_kwh(view.assumed_kwh)} kWh | custo estimado {cost}"
+    )
+    if view.stale_for_s is not None:
+        line += f" | sem leitura (obsoleta há {int(view.stale_for_s)} s)"
+    return line
+
+
+def render_track_end(result: Any, zone: Any) -> str:
+    s, a = result.session, result.acc
+    ended = s.ended_at.astimezone(zone).strftime("%d/%m/%Y %H:%M:%S") if s.ended_at else "?"
+    lines = [
+        f"Sessão {s.id} encerrada em {ended} ({_END_REASON[result.end_reason.value]}).",
+        f"Tempo coberto: {_secs(a.covered_s)}; excluído: {_secs(a.excluded_s)}",
+    ]
+    if a.partial_data:
+        lines.append("Dados parciais: há intervalos sem leitura válida.")
+    for old, decision in result.recovered:
+        reason = _END_REASON[decision.end_reason.value] if decision.end_reason else "?"
+        lines.append(f"Sessão anterior {old.id} recuperada: {reason}.")
+    lines.extend(f"Aviso: {w}" for w in result.warnings)
+    lines.append(f"({LABEL})")
+    return "\n".join(lines) + "\n"
+
+
+def render_session_list(rows: Any, zone: Any) -> str:
+    if not rows:
+        return "Nenhuma sessão registrada.\n"
+    lines = []
+    for r in rows:
+        s, a = r.session, r.acc
+        start = s.started_at.astimezone(zone).strftime("%d/%m/%Y %H:%M:%S")
+        end = (
+            s.ended_at.astimezone(zone).strftime("%d/%m/%Y %H:%M:%S") if s.ended_at
+            else "em andamento"
+        )
+        reason = s.end_reason.value if s.end_reason else "-"
+        lines.append(
+            f"Sessão {s.id}: {start} a {end} ({reason}); medida {_kwh(a.measured_wh / 1000)} kWh,"
+            f" assumida {_kwh(a.assumed_wh / 1000)} kWh; base: {_BASIS[s.energy_basis.value]};"
+            f" escopo: {_SCOPE[s.scope]}" + ("; dados parciais" if a.partial_data else "")
+        )
+    return "\n".join(lines) + "\n"
+
+
+def render_period_cost(cost: Any) -> str:
+    lines = [
+        f"Custo estimado do período: {cost.total_cost.display()}",
+        f"  parte medida: {cost.measured_cost.display()} ({_kwh(cost.measured_kwh)} kWh)",
+        f"  parte assumida: {cost.assumed_cost.display()} ({_kwh(cost.assumed_kwh)} kWh)",
+        f"({LABEL})",
+        "",
+        f"Sessões consideradas: {cost.sessions}",
+        f"Tempo coberto: {_secs(cost.covered_s)}; excluído: {_secs(cost.excluded_s)}",
+    ]
+    if cost.partial_data:
+        lines.append("Dados parciais: o custo cobre apenas a parte coberta.")
+    return "\n".join(lines) + "\n"
+
+
+def render_export(text: str, outcome: Any) -> str:
+    out = text.rstrip("\n") + "\n"
+    if outcome.truncated:
+        out += "Aviso: texto truncado para caber no limite.\n"
+    return out

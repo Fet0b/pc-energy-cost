@@ -10,7 +10,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from .application.ports import CatalogFiles
+from .application.ports import CatalogFiles, LiveMeter
 from .application.refresh_catalog import RefreshRequest, RefreshResult, refresh_catalog
 from .domain.metering.ports import MeteringProvider
 from .domain.shared.errors import InvalidInput
@@ -26,8 +26,13 @@ from .infrastructure.metering.linux_rapl import (
     LinuxRaplProvider,
     SamplingRaplMeter,
 )
+from .infrastructure.export.proxmox_text import ProxmoxCompatibleTextExporter
+from .infrastructure.metering.live_rapl import LiveRaplMeter
+from .infrastructure.metering.live_wmi import LiveWmiMeter
 from .infrastructure.metering.windows_wmi import WindowsWmiProvider
+from .infrastructure.persistence.sqlite_sessions import SqliteSessionLedger, sessions_path_for
 from .infrastructure.persistence.sqlite_store import SqliteStore
+from .infrastructure.system.boot_id import LinuxBootId, NoBootId
 from .interface.cli.main import Services
 
 DB_ENV_VAR = "PC_ENERGY_COST_DB"
@@ -81,6 +86,24 @@ class _LazyStore:
         return getattr(self._open(), name)
 
 
+class _LazyLedger:
+    """Abre `sessions.sqlite` só no primeiro uso (nunca em `--help`, `estimar` ou erro de uso)."""
+
+    def __init__(self, path: Path) -> None:
+        self._path = path
+        self._ledger: SqliteSessionLedger | None = None
+
+    def __getattr__(self, name: str) -> Any:
+        if self._ledger is None:
+            self._ledger = SqliteSessionLedger(self._path)
+        return getattr(self._ledger, name)
+
+
+class _Monotonic:
+    def __init__(self, monotonic_ns: Callable[[], int]) -> None:
+        self.monotonic_ns = monotonic_ns
+
+
 def _rapl_watts(value: Decimal | None) -> int:
     if value is None:
         return DEFAULT_P_MAX_W
@@ -101,6 +124,8 @@ def build_services(
     monotonic_ns: Callable[[], int] = time.monotonic_ns,
     wall_clock: Callable[[], datetime] | None = None,
     sleep: Callable[[float], None] = time.sleep,
+    session_meter: Callable[[], LiveMeter] | None = None,
+    should_stop: Callable[[], bool] | None = None,
 ) -> Services:
     """Monta adaptadores e casos de uso. Os parâmetros `fetch_json`/`download`/relógios/`rapl_*`
     existem para injetar fontes fake nos testes; o padrão é rede, relógios e sysfs reais."""
@@ -127,6 +152,16 @@ def build_services(
             kwargs["wall_clock"] = wall_clock
         return SamplingRaplMeter(LinuxRaplProvider(rapl_root, **kwargs), sleep=sleep)
 
+    def live_meter() -> LiveMeter:
+        if session_meter is not None:
+            return session_meter()
+        if platform == "win32":
+            return LiveWmiMeter()
+        kwargs: dict[str, Any] = {"monotonic_ns": monotonic_ns}
+        if wall_clock is not None:
+            kwargs["wall_clock"] = wall_clock
+        return LiveRaplMeter(rapl_root, **kwargs)
+
     return Services(
         tariff_source=store,  # type: ignore[arg-type]
         clock=clock,
@@ -136,4 +171,12 @@ def build_services(
         refresh=refresh,
         series_provider=lambda csv_path: CsvPowerSeries(csv_path),
         meter_provider=meter,
+        # ledger SEPARADO (sessions.sqlite): o store.sqlite nunca é aberto nem alterado por sessões
+        session_ledger=_LazyLedger(sessions_path_for(path)),  # type: ignore[arg-type]
+        live_meter=live_meter,
+        mono=_Monotonic(monotonic_ns),
+        boot=NoBootId() if platform == "win32" or not platform.startswith("linux") else LinuxBootId(),
+        exporter=ProxmoxCompatibleTextExporter(),
+        sleep=sleep,
+        should_stop=should_stop,
     )

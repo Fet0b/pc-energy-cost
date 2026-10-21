@@ -30,6 +30,7 @@ D13 = {
     "overlapping_intervals": 2, "timezone_data_missing": 2, "double_inclusion": 2,
     "inclusion_undeclared": 2, "csv_conflicting_duplicate": 2, "csv_unknown_columns": 2,
     "csv_invalid_header": 2, "csv_invalid_row": 2, "csv_too_many_rows": 2,
+    "session_already_open": 2, "session_not_found": 2,
     "supplier_ambiguous": 3, "unsupported": 3, "tariff_ambiguous": 3,
     "tariff_not_found": 4, "tariff_not_in_effect": 4, "schema_mismatch": 4,
     "unexpected_html": 4, "download_incomplete": 4, "cache_corrupted": 4,
