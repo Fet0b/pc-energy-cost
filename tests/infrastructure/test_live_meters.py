@@ -141,22 +141,26 @@ def test_s12_rapl_short_read_failure_does_not_span_the_failure(rapl):
 
 
 def _retained_growth(run, n):
-    """Bytes retidos após `n` tiques (com coleta de ciclos): lixo ainda não coletado não conta.
+    """Bytes retidos após `n` tiques (com coleta de ciclos) em locais que ganharam muitos blocos.
 
-    Faz antes uma passada de aquecimento do mesmo tamanho: alocações únicas do interpretador
-    (ex.: crescimento da tabela de strings internadas, que o pathlib do Python 3.13 aciona e que
-    caiu dentro da janela medida, ~1,9 MB com contagem 1) não dependem de `n`, ao contrário de
-    um histórico; a passada medida mostra só o que cresce com os tiques.
+    Crescimento com os tiques é por natureza muitos blocos pequenos (um por tique, ou mais).
+    O interpretador faz, de vez em quando, UMA alocação grande e única que o tracemalloc
+    atribui a quem estava rodando (aqui `sys.intern` no pathlib: ~1,9 MB, contagem 1, nos
+    Python 3.12 e 3.13 do CI), e que não depende de `n`: medições repetidas no mesmo estado
+    deram ~9 KB, e com o dobro de tiques ~3 KB. Por isso só contam os locais com mais de
+    `_MIN_BLOCKS` blocos novos; o limite de bytes do chamador não muda.
     """
-    run(n)
     gc.collect()
     tracemalloc.start()
     base = tracemalloc.take_snapshot()
     run(n)
     gc.collect()
-    grown = sum(s.size_diff for s in tracemalloc.take_snapshot().compare_to(base, "filename"))
+    stats = tracemalloc.take_snapshot().compare_to(base, "lineno")
     tracemalloc.stop()
-    return grown
+    return sum(s.size_diff for s in stats if s.count_diff > _MIN_BLOCKS)
+
+
+_MIN_BLOCKS = 50
 
 
 def test_s12_rapl_memory_does_not_grow_with_ticks(rapl):
